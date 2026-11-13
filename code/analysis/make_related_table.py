@@ -62,6 +62,10 @@ PROTOCOL_SHORT = [
      "image-level stratified single split"),
     ("k-fold CV; number of folds and grouping not reported",
      "$k$-fold, grouping unreported"),
+    ("stratified single split; grouping not determinable from the available text",
+     "stratified single split; grouping not determinable"),
+    ("5-fold CV over the pooled, augmented image set",
+     "5-fold, pooled w/ LC25000"),
 ]
 
 
@@ -71,6 +75,16 @@ def _protocol(v: str) -> str:
         if s == long:
             return _esc(short)
     return _esc(s)
+
+
+# Where each row's protocol information came from. Rows audited from the full
+# text are the only ones where an absence of reporting can be asserted; the
+# others are limited by what the abstract or publisher preview discloses.
+SOURCE_SHORT = {"full text": "F", "abstract": "A", "preview": "P"}
+
+
+def _source(v: object) -> str:
+    return SOURCE_SHORT.get(str(v).strip().lower(), _esc(v))
 
 
 def _short(study: str) -> str:
@@ -96,14 +110,15 @@ def build(df: pd.DataFrame) -> str:
             _flag(r["reports_ci_or_tests"]),
             _flag(r["stain_normalisation"]),
             _flag(r["calibration_or_abstention"]),
+            _source(r.get("verification", "")),
         ]) + r" \\")
 
     return "\n".join([
         r"\footnotesize",
-        r"\begin{tabular}{@{}l c c p{0.20\linewidth} c p{0.17\linewidth} cccc@{}}",
+        r"\begin{tabular}{@{}l c c p{0.175\linewidth} c p{0.15\linewidth} ccccc@{}}",
         r"\toprule",
         r"Study & Year & \#cls & Split protocol & Rep.\ CV & Headline &"
-        r" 7-cls & CI/test & Stain & Calib. \\",
+        r" 7-cls & CI/test & Stain & Calib. & Source \\",
         r"\midrule",
         *rows,
         r"\bottomrule",
