@@ -22,12 +22,16 @@ WANTED = {
     "eOneSuperThreeImage":    "E1 super3 image-level balanced accuracy",
     "eOneSuperThreeTile":     "E1 super3 tile-level balanced accuracy",
     "eOneSuperThreeInflation": "E1 super3 image-minus-patient inflation",
+    "eOneSuperThreeInflationVal": "E1 super3 inflation, bare value",
     "eOneFullSevenPatient":   "E1 full7 patient-disjoint balanced accuracy",
     "eOneFullSevenImage":     "E1 full7 image-level balanced accuracy",
     "eOneFullSevenInflation": "E1 full7 image-minus-patient inflation",
+    "eOneFullSevenInflationVal": "E1 full7 inflation, bare value",
     "eTwoBestSuperThree":     "E2 best patient-disjoint super3",
     "eTwoBestFullSeven":      "E2 best patient-disjoint full7",
+    "eTwoBestFullSevenBare": "E2 best full7, no encoder name",
     "eTwoBestGradeThree":     "E2 best patient-disjoint grade3",
+    "eTwoBestGradeThreeBare": "E2 best grade3, no encoder name",
     "eTwoSpread":             "E2 spread across frozen encoders",
     "eTwoSpreadSuperThree":   "E2 encoder spread, super3",
     "eTwoSpreadFullSeven":    "E2 encoder spread, full7",
@@ -36,6 +40,7 @@ WANTED = {
     "eOneGradeThreePatient":  "E1 grade3 patient-disjoint balanced accuracy",
     "eOneGradeThreeImage":    "E1 grade3 image-level balanced accuracy",
     "eOneGradeThreeInflation": "E1 grade3 image-minus-patient inflation",
+    "eOneGradeThreeInflationVal": "E1 grade3 inflation, bare value",
     "eFiveBestSuperThree":    "E5 best fused super3",
     "eFiveBestFullSeven":     "E5 best fused full7",
     "eFiveGainSuperThree":    "E5 gain over the single-encoder baseline, super3",
@@ -137,8 +142,12 @@ def collect() -> dict[str, str]:
                     if key in WANTED:
                         out[key] = _fmt(m, lo, hi)
             if "patient" in per and "image" in per:
-                out[f"eOne{tag}Inflation"] = \
-                    f"{100 * (per['image'] - per['patient']):+.1f} percentage points"
+                delta = 100 * (per["image"] - per["patient"])
+                out[f"eOne{tag}Inflation"] = f"{delta:+.1f} percentage points"
+                # Bare variant: the abstract lists all three inflations in one
+                # series, where repeating the unit three times wastes words
+                # against the 250-word limit.
+                out[f"eOne{tag}InflationVal"] = f"{delta:+.1f}"
 
     s2 = _read("summary_e2_backbones.csv")
     if s2 is not None:
@@ -154,9 +163,12 @@ def collect() -> dict[str, str]:
             g = d[d.task == task]
             if len(g):
                 r = g.loc[g.balanced_accuracy_mean.idxmax()]
-                out[key] = (_fmt(r.balanced_accuracy_mean, r.balanced_accuracy_lo,
-                                 r.balanced_accuracy_hi)
-                            + f" ({_tex(r.backbone)})")
+                bare = _fmt(r.balanced_accuracy_mean, r.balanced_accuracy_lo,
+                            r.balanced_accuracy_hi)
+                out[key] = bare + f" ({_tex(r.backbone)})"
+                # Variant without the encoder name, for the abstract, where the
+                # encoder is already named and nested parentheses read badly.
+                out[key + "Bare"] = bare
         sp = {}
         for task in ("super3", "full7", "grade3"):
             g = d[(d.task == task) & (d.representation == "tilemean") &
