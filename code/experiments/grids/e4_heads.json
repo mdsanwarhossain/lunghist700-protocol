@@ -1,0 +1,29 @@
+[
+  {
+    "backbone": "phikon_vitb16",
+    "norm": "raw",
+    "tasks": [
+      "super3",
+      "full7"
+    ],
+    "protocols": [
+      "patient"
+    ],
+    "representations": [
+      "tilemean"
+    ],
+    "heads": [
+      "mlp",
+      "attnmil"
+    ],
+    "magnifications": [
+      "both"
+    ],
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "head_kw": {}
+  }
+]

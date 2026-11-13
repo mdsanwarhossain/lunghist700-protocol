@@ -1,0 +1,11 @@
+# Raw inputs are re-downloadable and far too large for git.
+data/
+.venv/
+__pycache__/
+*.pyc
+# Manuscript sources are kept out of the public repository while the paper is
+# under review; every number in them is reproduced by the code and tables here.
+paper/
+paper_ieee/
+*.tex
+*.pdf.bak

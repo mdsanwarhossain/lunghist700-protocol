@@ -1,0 +1,10 @@
+[
+  {
+    "backbone": "resnet50_in1k", "norm": "raw",
+    "tasks": ["super3", "full7", "grade3"],
+    "protocols": ["patient", "image", "tile"],
+    "representations": ["tilemean"],
+    "heads": ["linear", "mlp"],
+    "magnifications": ["both"]
+  }
+]

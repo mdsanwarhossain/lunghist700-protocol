@@ -1,0 +1,2 @@
+n,accuracy,mean_confidence,overconfidence_gap,ece,mce,ece_temperature_scaled,ece_temperature_scaled_insample,fitted_temperature,fitted_temperature_insample,aurc,risk_at_80_coverage,risk_at_50_coverage
+3455,0.5473227206946455,0.8659685483458418,0.3186458276511963,0.3189529179922923,0.5426275271196335,0.05202777266689854,0.03634945485851484,3.5,3.5,0.2681591435855262,0.3918234442836469,0.27967573827446435

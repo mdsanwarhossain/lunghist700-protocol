@@ -1,0 +1,4 @@
+lc_label,n_images,n_groups_recovered,n_originals_documented,median_group_size,min_group_size,max_group_size,groups_of_size_20
+adenocarcinomas,5000,4513,250,1.0,1,4,0
+benign,5000,4538,250,1.0,1,4,0
+squamous carcinomas,5000,4507,250,1.0,1,4,0

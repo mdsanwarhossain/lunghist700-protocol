@@ -1,0 +1,100 @@
+==============================================================================
+LungHist700 dataset audit
+==============================================================================
+images=691  patients=45  magnifications=['20x', '40x']
+pixel sizes: ['1600x1200']
+
+[1] exact byte-duplicate images: 0
+
+[2] class x magnification counts
+magnification  20x  40x  All
+label7                      
+aca_bd          57   46  103
+aca_md          44   46   90
+aca_pd          45   42   87
+nor             85   66  151
+scc_bd          50   49   99
+scc_md          30   36   66
+scc_pd          48   47   95
+All            359  332  691
+
+    superclass counts: {'aca': 280, 'scc': 260, 'nor': 151}
+    7-class imbalance ratio (max/min) = 2.29
+
+[3] patient x class incidence (number of images)
+label7      aca_bd  aca_md  aca_pd  nor  scc_bd  scc_md  scc_pd
+patient_id                                                     
+1                9       0       0    0       0       0       0
+2                0       8       0    0       0       0       0
+3                0       2       0    0       0       0       0
+4                0       0      10    0       0       0       0
+5               11       0       0    0       0       0       0
+6               17       0       6   20       0       0       0
+7               19       0       0   10       0       0       0
+8                1       1      24    0       0       0       0
+9               13       0       0    0       0       0       0
+10               6       0       0    0       0       0       0
+11               7       0       0    8       0       0       0
+12              10      11       0    6       0       0       0
+13              10      10      10    0       0       0       0
+14               0      11      10   30       0       0       0
+15               0       7       0    0       0       0       0
+16               0      35       1    0       0       0       0
+17               0       5       1   17       0       0       0
+18               0       0       9    0       1       0       0
+19               0       0       5    0       0       0       0
+20               0       0       9    0       0       0       0
+21               0       0       2    4      10       0       0
+22               0       0       0    0       5       0       0
+23               0       0       0    0       5       0       0
+24               0       0       0    0       0      10      10
+25               0       0       0    0      23       0       0
+26               0       0       0    0      20       0       0
+27               0       0       0    0      11       0       0
+28               0       0       0    0      19       0       0
+29               0       0       0    0       4       3      24
+30               0       0       0    0       1       1       1
+31               0       0       0   19       0       7       6
+32               0       0       0    0       0       9       0
+33               0       0       0    0       0      11       0
+34               0       0       0    0       0       4      19
+35               0       0       0    0       0       1       0
+36               0       0       0    0       0      10       0
+37               0       0       0    0       0      10       0
+38               0       0       0    0       0       0      23
+39               0       0       0    0       0       0       3
+40               0       0       0    0       0       0       9
+41               0       0       0   10       0       0       0
+42               0       0       0    4       0       0       0
+43               0       0       0    5       0       0       0
+44               0       0       0    8       0       0       0
+45               0       0       0   10       0       0       0
+
+    classes per patient: {1: 29, 2: 6, 3: 10}
+    patients contributing >1 of the 7 classes: 16
+
+[4] DISTINCT PATIENTS PER CLASS  <-- bounds patient-disjoint CV
+    aca_bd  : 10 patients, 103 images
+    aca_md  :  9 patients,  90 images  <-- limits k
+    aca_pd  : 11 patients,  87 images
+    nor     : 13 patients, 151 images
+    scc_bd  : 10 patients,  99 images
+    scc_md  : 10 patients,  66 images
+    scc_pd  :  8 patients,  95 images  <-- limits k
+    minimum patients in any of the 7 classes = 8
+    => a patient-disjoint, class-stratified design cannot exceed k = 8 folds for the 7-class task
+
+    distinct patients per superclass: {'aca': 21, 'nor': 13, 'scc': 21}
+    => 3-class task bound: k <= 13 folds
+
+[5] images per patient
+    min=1 median=10 max=51 mean=15.4
+    top-5 contributors hold 193/691 images (27.9%)
+
+[6] magnification coverage per (patient, class)
+    (patient,class) groups with both 20x and 40x: 36/71
+
+[7] size of the original single 80/10/10 patient-wise split
+    10% of 691 images ~= 69 images, drawn from ~4 of 45 patients
+    => one test fold rests on a handful of patients; a single split cannot
+       separate model quality from patient sampling noise.

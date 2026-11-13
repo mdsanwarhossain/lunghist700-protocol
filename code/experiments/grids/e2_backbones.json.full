@@ -1,0 +1,18 @@
+[
+  { "backbone": "resnet50_in1k",   "norm": "raw",
+    "tasks": ["super3","full7","grade3"], "protocols": ["patient"],
+    "representations": ["tilemean","global","tilemean+global","handcrafted"],
+    "heads": ["linear"], "magnifications": ["both","20x","40x"] },
+  { "backbone": "efficientnet_b0", "norm": "raw",
+    "tasks": ["super3","full7","grade3"], "protocols": ["patient"],
+    "representations": ["tilemean","global"],
+    "heads": ["linear"], "magnifications": ["both","20x","40x"] },
+  { "backbone": "phikon_vitb16",   "norm": "raw",
+    "tasks": ["super3","full7","grade3"], "protocols": ["patient"],
+    "representations": ["tilemean","global","tilemean+global"],
+    "heads": ["linear"], "magnifications": ["both","20x","40x"] },
+  { "backbone": "dinov2_vitb14",   "norm": "raw",
+    "tasks": ["super3","full7","grade3"], "protocols": ["patient"],
+    "representations": ["tilemean","global"],
+    "heads": ["linear"], "magnifications": ["both","20x","40x"] }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "backbone": "resnet50_in1k",
+    "norm": "macenko",
+    "tasks": [
+      "super3",
+      "full7"
+    ],
+    "protocols": [
+      "patient"
+    ],
+    "representations": [
+      "tilemean"
+    ],
+    "heads": [
+      "linear"
+    ],
+    "magnifications": [
+      "both"
+    ]
+  },
+  {
+    "backbone": "resnet50_in1k",
+    "norm": "raw",
+    "tasks": [
+      "super3",
+      "full7"
+    ],
+    "protocols": [
+      "patient"
+    ],
+    "representations": [
+      "tilemean"
+    ],
+    "heads": [
+      "linear"
+    ],
+    "magnifications": [
+      "both"
+    ]
+  }
+]
