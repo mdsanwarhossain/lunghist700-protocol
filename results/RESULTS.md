@@ -263,6 +263,22 @@ patient_id
 | majority | 0.574 | 0.497 | +0.077 |
 | mean_proba | 0.570 | 0.497 | +0.073 |
 
+## Stain normalisation
+
+| backbone | task | normalisation | balanced accuracy [95% CI] | delta vs raw | p (Holm) |
+|---|---|---|---|---|---|
+| efficientnet_b0 | full7 | raw | 0.478 [0.442, 0.513] | - | - |
+| efficientnet_b0 | grade3 | raw | 0.489 [0.444, 0.534] | - | - |
+| efficientnet_b0 | super3 | raw | 0.786 [0.768, 0.804] | - | - |
+| phikon_vitb16 | full7 | raw | 0.497 [0.458, 0.537] | - | - |
+| phikon_vitb16 | grade3 | raw | 0.505 [0.461, 0.548] | - | - |
+| phikon_vitb16 | super3 | raw | 0.870 [0.857, 0.884] | - | - |
+| resnet50_in1k | full7 | raw | 0.462 [0.419, 0.507] | - | - |
+| resnet50_in1k | full7 | macenko | 0.400 [0.363, 0.438] | -0.063 | 0.14 |
+| resnet50_in1k | grade3 | raw | 0.492 [0.464, 0.518] | - | - |
+| resnet50_in1k | super3 | raw | 0.722 [0.696, 0.748] | - | - |
+| resnet50_in1k | super3 | macenko | 0.675 [0.643, 0.708] | -0.047 | 0.24 |
+
 ## Aggregation head (patient-disjoint)
 
 | backbone | task | head | balanced accuracy [95% CI] | macro-F1 |

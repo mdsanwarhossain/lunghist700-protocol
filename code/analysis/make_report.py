@@ -217,7 +217,15 @@ def report_stain(lines: list[str]) -> None:
         return
     base = e2[(e2["head"] == "linear") & (e2.representation == "tilemean") &
               (e2.magnification == "both") & (e2.norm == "raw")]
-    folds = pd.concat([base, e3], ignore_index=True)
+    # E3 re-ran the unnormalised ResNet-50 arm as its own control, so those
+    # folds are present in both frames. Concatenating without deduplicating
+    # counts each of them twice, which leaves the mean unchanged but halves
+    # the apparent variance of the raw arm and so narrows its interval
+    # against the normalised arm it is being compared with.
+    folds = pd.concat([base, e3], ignore_index=True).drop_duplicates(
+        subset=["backbone", "norm", "task", "protocol", "representation",
+                "head", "magnification", "seed", "fold"],
+        keep="first")
     s = A.summarize(folds)
     s.to_csv(T / "summary_e3_stain.csv", index=False)
     lines.append("\n## Stain normalisation\n")
