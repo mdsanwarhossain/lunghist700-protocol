@@ -1,0 +1,11 @@
+[
+  {
+    "backbone": "resnet50_in1k",
+    "norm": "raw",
+    "tasks": ["bh_binary", "bh_type8"],
+    "protocols": ["patient", "image"],
+    "representations": ["tilemean"],
+    "heads": ["linear"],
+    "magnifications": ["both"]
+  }
+]

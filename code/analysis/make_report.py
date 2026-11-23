@@ -174,8 +174,10 @@ def report_errors_and_calibration(lines: list[str]) -> None:
     if sel.empty:
         return
     classes = TASK_CLASSES["full7"]
+    # Panel (b) of this figure is the error decomposition, so compute it first.
+    err_split = P.graded_confusion_summary(sel.y_true.values, sel.y_pred.values)
     F.fig_confusion(sel, classes, FIG, "fig_confusion_full7",
-                    f"7-class, {best}, patient-disjoint")
+                    f"7-class, {best}, patient-disjoint", errors=err_split)
     s3 = preds[(preds.task == "super3") & (preds.backbone == best) &
                (preds["head"] == "linear") & (preds.representation == "tilemean") &
                (preds.magnification == "both") & (preds.protocol == "patient")]
@@ -367,7 +369,9 @@ def report_design_and_literature() -> None:
     """
     inc = _read("patient_class_incidence.csv")
     if inc is not None:
-        F.fig_design(inc, FIG)
+        e2 = _read("summary_e2_backbones.csv")
+        n_enc = int(e2.backbone.nunique()) if e2 is not None else 4
+        F.fig_design(inc, FIG, n_encoders=n_enc)
 
     rel = _read("related_work.csv")
     if rel is None or "headline_value" not in rel.columns:

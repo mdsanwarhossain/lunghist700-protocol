@@ -109,20 +109,40 @@ def fig_backbones(summary: pd.DataFrame, out: Path,
     ax.set_ylim(0, 1.0)
     ax.yaxis.set_major_formatter(PercentFormatter(1.0))
     ax.legend(title="task", ncol=3, loc="upper center", bbox_to_anchor=(0.5, 1.16))
-    ax.set_title("Frozen representations, patient-disjoint 5x5-fold CV", pad=24)
+    ax.set_title("Frozen representations, patient-disjoint repeated CV", pad=24)
     _save(fig, out, "fig_backbones")
 
 
+# Error types in the order a pathologist would rank their cost: calling a
+# malignant field normal is worse than confusing two adjacent grades.
+ERROR_ORDER = [("err_normal_vs_malignant", "normal vs malignant"),
+               ("err_subtype", "subtype (ACA vs SCC)"),
+               ("err_grade_distant", "grade, two steps"),
+               ("err_grade_adjacent", "grade, one step")]
+
+
 def fig_confusion(preds: pd.DataFrame, classes: list[str], out: Path,
-                  name: str = "fig_confusion", title: str = "") -> None:
-    """Row-normalised confusion over pooled out-of-fold predictions."""
+                  name: str = "fig_confusion", title: str = "",
+                  errors: dict[str, float] | None = None) -> None:
+    """Row-normalised confusion over pooled out-of-fold predictions.
+
+    With ``errors`` the figure gains a second panel decomposing the error mass
+    by the kind of mistake, because on this task the headline number is
+    dominated by one-step grade confusions whose clinical cost is low.
+    """
     M = np.zeros((len(classes), len(classes)))
     for t, p in zip(preds.y_true, preds.y_pred):
         if t in classes and p in classes:
             M[classes.index(t), classes.index(p)] += 1
     Mn = M / np.maximum(M.sum(1, keepdims=True), 1)
-    fig, ax = plt.subplots(figsize=(0.62 * len(classes) + 2.0,
-                                    0.62 * len(classes) + 1.7))
+    if errors:
+        fig, (ax, axb) = plt.subplots(
+            1, 2, figsize=(0.62 * len(classes) + 6.0, 0.62 * len(classes) + 1.7),
+            gridspec_kw={"width_ratios": [1.35, 1.0]})
+    else:
+        axb = None
+        fig, ax = plt.subplots(figsize=(0.62 * len(classes) + 2.0,
+                                        0.62 * len(classes) + 1.7))
     im = ax.imshow(Mn, cmap="Blues", vmin=0, vmax=1)
     for i in range(len(classes)):
         for j in range(len(classes)):
@@ -134,8 +154,24 @@ def fig_confusion(preds: pd.DataFrame, classes: list[str], out: Path,
     ax.set_xlabel("predicted")
     ax.set_ylabel("reference")
     ax.grid(False)
-    ax.set_title(title or "Pooled out-of-fold confusion")
+    ax.set_title(("(a) " if axb is not None else "") +
+                 (title or "Pooled out-of-fold confusion"), fontsize=9)
     fig.colorbar(im, ax=ax, shrink=0.8, label="row fraction")
+
+    if axb is not None:
+        keys = [(k, lab) for k, lab in ERROR_ORDER if k in errors]
+        vals = [errors[k] for k, _ in keys]
+        ypos = np.arange(len(keys))
+        axb.barh(ypos, vals, color=["#B4472E", "#C2571A", "#5B8CB8", "#9CB8D1"][:len(keys)])
+        for y, v in zip(ypos, vals):
+            axb.text(v + 0.004, y, f"{v:.3f}", va="center", fontsize=8)
+        axb.set_yticks(ypos, [lab for _, lab in keys], fontsize=8)
+        axb.invert_yaxis()
+        axb.set_xlabel("share of all predictions", fontsize=8)
+        axb.set_xlim(0, max(vals) * 1.28)
+        axb.set_title("(b) Which mistakes the errors are", fontsize=9)
+        axb.grid(axis="x", alpha=0.3)
+        axb.set_axisbelow(True)
     _save(fig, out, name)
 
 
@@ -267,7 +303,7 @@ def _protocol_schematic(ax) -> None:
     ax.axis("off")
 
 
-def _pipeline_schematic(ax) -> None:
+def _pipeline_schematic(ax, n_encoders: int = 4) -> None:
     """The study design: encode once, then vary one factor at a time.
 
     The point the panel has to carry is that the grid hangs off a single cached
@@ -278,7 +314,7 @@ def _pipeline_schematic(ax) -> None:
     steps = [
         (0.5, "691 fields\n1600$\\times$1200", "#E8EEF4", "#2D6A9F"),
         (2.6, "tile grid at\nnative resolution", "#E8EEF4", "#2D6A9F"),
-        (4.8, "3 frozen\nencoders", "#E8EEF4", "#2D6A9F"),
+        (4.8, f"{n_encoders} frozen\nencoders", "#E8EEF4", "#2D6A9F"),
         (7.0, "cached embedding\nstore", "#FDF0E6", "#C2571A"),
     ]
     for x, text, fc, ec in steps:
@@ -315,8 +351,12 @@ def _pipeline_schematic(ax) -> None:
     ax.axis("off")
 
 
-def fig_design(incidence: pd.DataFrame, out: Path) -> None:
-    """Patient-class coupling, and what each protocol permits to be shared."""
+def fig_design(incidence: pd.DataFrame, out: Path, n_encoders: int = 4) -> None:
+    """Patient-class coupling, and what each protocol permits to be shared.
+
+    ``n_encoders`` is passed in rather than fixed, so the schematic cannot drift
+    from the number of encoders the benchmark actually ran.
+    """
     d = incidence.set_index("patient_id")
     d = d[[c for c in CLASS_LABEL if c in d.columns]]
 
@@ -345,7 +385,7 @@ def fig_design(incidence: pd.DataFrame, out: Path) -> None:
                   fontsize=9.5, loc="left")
 
     ax3 = fig.add_subplot(gs[2])
-    _pipeline_schematic(ax3)
+    _pipeline_schematic(ax3, n_encoders)
     ax3.set_title("(c)  study design: one cached store, one factor varied at a time",
                   fontsize=9.5, loc="left")
     _save(fig, out, "fig_design")

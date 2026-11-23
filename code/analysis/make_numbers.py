@@ -27,7 +27,49 @@ WANTED = {
     "eOneFullSevenImage":     "E1 full7 image-level balanced accuracy",
     "eOneFullSevenInflation": "E1 full7 image-minus-patient inflation",
     "eOneFullSevenInflationVal": "E1 full7 inflation, bare value",
+    "mechInflationAtOne":     "inflation at one image per group",
+    "mechInflationAtTwo":     "inflation at two images per group",
+    "mechInflationAtFour":    "inflation at four images per group",
+    "mechInflationFull":      "inflation at the full cohort",
+    "mechShareByFour":        "share of the full inflation reached by four",
+    "mechNNFull":             "same-group nearest neighbours, ungrouped, full",
+    "mechNNAtTwo":            "same-group nearest neighbours, ungrouped, cap 2",
+    "mechImagesPerGroup":     "mean images per group, full cohort",
+    "mechBhAtOne":            "BreakHis inflation at one image per group",
+    "mechBhFull":             "BreakHis inflation at the full cohort",
+    "mechCtrlLow":            "control: inflation at the fewest images per group",
+    "mechCtrlHigh":           "control: inflation at the most images per group",
+    "mechCtrlLowCell":        "control: low cell, images x groups",
+    "mechCtrlHighCell":       "control: high cell, images x groups",
+    "mechCtrlN":              "control: images per cell",
+    "bhPatientBinary":        "BreakHis binary, patient-disjoint",
+    "bhImageBinary":          "BreakHis binary, image-level",
+    "bhInflationBinary":      "BreakHis binary inflation",
+    "bhPatientTypeEight":     "BreakHis 8-type, patient-disjoint",
+    "bhImageTypeEight":       "BreakHis 8-type, image-level",
+    "bhInflationTypeEight":   "BreakHis 8-type inflation",
+    "bhPatients":             "BreakHis patient count",
+    "bhImages":               "BreakHis image count at the audited magnification",
+    "cmSensSuperThree":       "clinical macro sensitivity, best super3",
+    "cmSpecSuperThree":       "clinical macro specificity, best super3",
+    "cmPrecSuperThree":       "clinical macro precision, best super3",
+    "cmAucSuperThree":        "one-vs-rest AUC, best super3",
+    "cmSensFullSeven":        "clinical macro sensitivity, best full7",
+    "cmSpecFullSeven":        "clinical macro specificity, best full7",
+    "cmPrecFullSeven":        "clinical macro precision, best full7",
+    "cmAucFullSeven":         "one-vs-rest AUC, best full7",
+    "cmSensGradeThree":       "clinical macro sensitivity, best grade3",
+    "cmSpecGradeThree":       "clinical macro specificity, best grade3",
+    "cmPrecGradeThree":       "clinical macro precision, best grade3",
+    "cmAucGradeThree":        "one-vs-rest AUC, best grade3",
+    "cmPatientSuperThree":    "best super3 with a patient-level interval",
+    "cmPatientFullSeven":     "best full7 with a patient-level interval",
+    "cmPatientGradeThree":    "best grade3 with a patient-level interval",
+    "cmWidthRatioSuperThree": "patient/fold interval width ratio, super3",
+    "cmWidthRatioFullSeven":  "patient/fold interval width ratio, full7",
+    "cmWidthRatioGradeThree": "patient/fold interval width ratio, grade3",
     "eTwoBestSuperThree":     "E2 best patient-disjoint super3",
+    "eTwoBestSuperThreeBare": "E2 best super3, no encoder name",
     "eTwoBestFullSeven":      "E2 best patient-disjoint full7",
     "eTwoBestFullSevenBare": "E2 best full7, no encoder name",
     "eTwoBestGradeThree":     "E2 best patient-disjoint grade3",
@@ -36,6 +78,14 @@ WANTED = {
     "eTwoSpreadSuperThree":   "E2 encoder spread, super3",
     "eTwoSpreadFullSeven":    "E2 encoder spread, full7",
     "eTwoSpreadGradeThree":   "E2 encoder spread, grade3",
+    "eTwoDinoSuperThree":     "E2 DINOv2 super3 patient-disjoint",
+    "eTwoDinoFullSeven":      "E2 DINOv2 full7 patient-disjoint",
+    "eTwoDinoGradeThree":     "E2 DINOv2 grade3 patient-disjoint",
+    "eTwoPhikonFullSeven":    "E2 Phikon full7 patient-disjoint",
+    "eTwoPhikonGradeThree":   "E2 Phikon grade3 patient-disjoint",
+    "eTwoRatioSuperThree":    "protocol effect / encoder spread, super3",
+    "eTwoRatioFullSeven":     "protocol effect / encoder spread, full7",
+    "eTwoRatioGradeThree":    "protocol effect / encoder spread, grade3",
     "eTwoResnetSuperThree":   "E2 ResNet-50 super3 patient-disjoint",
     "eOneGradeThreePatient":  "E1 grade3 patient-disjoint balanced accuracy",
     "eOneGradeThreeImage":    "E1 grade3 image-level balanced accuracy",
@@ -184,11 +234,34 @@ def collect() -> dict[str, str]:
               (d.magnification == "both") & (d.backbone == "resnet50_in1k")]
         if len(g):
             out["eTwoResnetSuperThree"] = f"{g.balanced_accuracy_mean.iloc[0]:.3f}"
+        # Per-encoder figures on the shared tile-mean arm, so the three
+        # pretraining regimes can be named in the text without typing a number.
+        for bb, nick in (("dinov2_vitb14", "Dino"), ("phikon_vitb16", "Phikon")):
+            for task, tag in (("super3", "SuperThree"), ("full7", "FullSeven"),
+                              ("grade3", "GradeThree")):
+                key = f"eTwo{nick}{tag}"
+                if key not in WANTED:
+                    continue
+                g = d[(d.task == task) & (d.representation == "tilemean") &
+                      (d.magnification == "both") & (d.backbone == bb)]
+                if len(g):
+                    out[key] = f"{g.balanced_accuracy_mean.iloc[0]:.3f}"
+        # How many times larger the protocol effect is than the encoder spread.
+        for task, tag in (("super3", "SuperThree"), ("full7", "FullSeven"),
+                          ("grade3", "GradeThree")):
+            infl = out.get(f"eOne{tag}InflationVal")
+            if task in sp and infl and sp[task] > 0:
+                out[f"eTwoRatio{tag}"] = f"{abs(float(infl)) / sp[task]:.1f}"
         if sp:
-            out["eTwoSpread"] = ", ".join(
-                f"{v:.1f}" for v in (sp.get("super3"), sp.get("full7"),
-                                     sp.get("grade3")) if v is not None
-            ) + " percentage points for the three-, seven- and grading tasks"
+            vals = [f"{v:.1f}" for v in (sp.get("super3"), sp.get("full7"),
+                                         sp.get("grade3")) if v is not None]
+            # Serial list, so the sentence reads as English: "14.8, 3.5 and 1.6"
+            # rather than "14.8, 3.5, 1.6".
+            joined = (" and ".join([", ".join(vals[:-1]), vals[-1]])
+                      if len(vals) > 1 else vals[0])
+            out["eTwoSpread"] = (
+                joined + " percentage points for the three-, seven- and "
+                "grading tasks")
 
     if s2 is not None:
         g = s2[(s2.protocol == "patient") & (s2["head"] == "linear") &
@@ -287,6 +360,126 @@ def collect() -> dict[str, str]:
                 if len(base):
                     out["eFiveGainSuperThree"] = \
                         f"{100 * (by.max() - base.iloc[0]):+.1f} percentage points"
+    # ---- clinical metrics and the patient-level interval --------------------
+    # The fold bootstrap resamples folds; this one resamples patients, which is
+    # the quantity a reader assumes an interval bounds on a 45-patient cohort.
+    cm = _read("clinical_metrics.csv")
+    summ = _read("summary_e2_backbones.csv")
+    if cm is not None and summ is not None:
+        # Same restriction as the eTwoBest block above: the pooled-magnification
+        # arm is the one every encoder shares, so the clinical metrics describe
+        # the same configuration the headline figures do.
+        d = summ[(summ.protocol == "patient") & (summ["head"] == "linear") &
+                 (summ.magnification == "both")]
+        for task, tag in (("super3", "SuperThree"), ("full7", "FullSeven"),
+                          ("grade3", "GradeThree")):
+            g = d[d.task == task]
+            if not len(g):
+                continue
+            best = g.loc[g.balanced_accuracy_mean.idxmax()]
+            sel = cm[(cm.task == task) & (cm.backbone == best.backbone)
+                     & (cm.representation == best.representation)
+                     & (cm.magnification == best.magnification)]
+            if not len(sel):
+                continue
+            val = {r.metric: r for r in sel.itertuples()}
+            for metric, key in (("sensitivity", "cmSens"), ("specificity", "cmSpec"),
+                                ("precision", "cmPrec"), ("auc_ovr", "cmAuc")):
+                if metric in val:
+                    out[key + tag] = f"{val[metric].value:.3f}"
+            if "balanced_accuracy" in val:
+                r = val["balanced_accuracy"]
+                out["cmPatient" + tag] = _fmt(r.value, r.lo, r.hi)
+                fold_w = best.balanced_accuracy_hi - best.balanced_accuracy_lo
+                pat_w = r.hi - r.lo
+                if fold_w > 0:
+                    out["cmWidthRatio" + tag] = f"{pat_w / fold_w:.1f}"
+
+    # ---- BreakHis, the external replication cohort --------------------------
+    bh = _read("breakhis_folds.csv")
+    if bh is not None:
+        d = bh[(bh["head"] == "linear") & (bh.representation == "tilemean")]
+        for task, tag in (("bh_binary", "Binary"), ("bh_type8", "TypeEight")):
+            g = d[d.task == task]
+            if not len(g):
+                continue
+            vals = {}
+            for proto, key in (("patient", "bhPatient"), ("image", "bhImage")):
+                gg = g[g.protocol == proto]
+                if not len(gg):
+                    continue
+                m, lo, hi = _mean_ci(gg)
+                vals[proto] = m
+                out[key + tag] = _fmt(m, lo, hi)
+            if "patient" in vals and "image" in vals:
+                out["bhInflation" + tag] = \
+                    f"{100 * (vals['image'] - vals['patient']):+.1f} percentage points"
+        if "n_test_patients" in bh.columns:
+            tot = bh[(bh.protocol == "patient") & (bh.seed == bh.seed.min())
+                     & (bh.task == bh.task.iloc[0])]
+            if len(tot):
+                out["bhPatients"] = str(int(tot.n_test_patients.sum()))
+        idx = T / "breakhis_index.csv"
+        if idx.exists():
+            out["bhImages"] = f"{len(pd.read_csv(idx)):,}".replace(",", "{,}")
+
+    # ---- the mechanism curve, replicated on the second cohort ---------------
+    bh_mech = _read("mechanism_breakhis.csv")
+    if bh_mech is not None:
+        ps = (bh_mech.groupby(["cap", "seed", "protocol"]).balanced_accuracy
+              .mean().reset_index())
+        w2 = ps.pivot_table(index=["cap", "seed"], columns="protocol",
+                            values="balanced_accuracy").reset_index()
+        w2["infl"] = 100 * (w2["image"] - w2["patient"])
+        cv = w2.groupby("cap").infl.mean()
+        if 1 in cv.index:
+            out["mechBhAtOne"] = f"{cv.loc[1]:+.1f} percentage points"
+        out["mechBhFull"] = f"{cv.iloc[-1]:+.1f} percentage points"
+
+    ctrl = _read("mechanism_control_lunghist700.csv")
+    if ctrl is not None:
+        ps = (ctrl.groupby(["per_group", "n_groups", "seed", "protocol"])
+              .agg(ba=("balanced_accuracy", "mean"),
+                   n=("n_images", "first")).reset_index())
+        w3 = ps.pivot_table(index=["per_group", "n_groups", "seed", "n"],
+                            columns="protocol", values="ba").reset_index()
+        w3["infl"] = 100 * (w3["image"] - w3["patient"])
+        cc = (w3.groupby(["per_group", "n_groups", "n"]).infl.mean()
+              .reset_index().sort_values("per_group"))
+        lo, hi = cc.iloc[0], cc.iloc[-1]
+        out["mechCtrlLow"] = f"{lo.infl:+.1f} percentage points"
+        out["mechCtrlHigh"] = f"{hi.infl:+.1f} percentage points"
+        out["mechCtrlLowCell"] = f"{int(lo.per_group)} images from {int(lo.n_groups)} patients"
+        out["mechCtrlHighCell"] = f"{int(hi.per_group)} images from {int(hi.n_groups)} patients"
+        out["mechCtrlN"] = f"{int(cc.n.min())}--{int(cc.n.max())}"
+
+    mech = _read("mechanism_lunghist700.csv")
+    if mech is not None:
+        per_seed = (mech.groupby(["cap", "seed", "protocol"])
+                    .agg(ba=("balanced_accuracy", "mean"),
+                         ipg=("images_per_group", "first")).reset_index())
+        w = per_seed.pivot_table(index=["cap", "seed", "ipg"],
+                                 columns="protocol", values="ba").reset_index()
+        w["infl"] = 100 * (w["image"] - w["patient"])
+        curve = (w.groupby(["cap", "ipg"]).infl.mean().reset_index()
+                 .sort_values("ipg"))
+        by_cap = dict(zip(curve.cap, curve.infl))
+        full = curve.iloc[-1]
+        for cap, key in ((1, "mechInflationAtOne"), (2, "mechInflationAtTwo"),
+                         (4, "mechInflationAtFour")):
+            if cap in by_cap:
+                out[key] = f"{by_cap[cap]:+.1f} percentage points"
+        out["mechInflationFull"] = f"{full.infl:+.1f} percentage points"
+        out["mechImagesPerGroup"] = f"{full.ipg:.1f}"
+        if 4 in by_cap and full.infl > 0:
+            out["mechShareByFour"] = f"{by_cap[4] / full.infl:.0%}".replace("%", "\\%")
+        nn = (mech[mech.protocol == "image"]
+              .groupby("cap").nn_same_group.mean())
+        if len(nn):
+            out["mechNNFull"] = f"{nn.iloc[-1]:.2f}"
+        if 2 in nn.index:
+            out["mechNNAtTwo"] = f"{nn.loc[2]:.2f}"
+
     return out
 
 

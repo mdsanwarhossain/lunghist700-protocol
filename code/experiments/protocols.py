@@ -35,6 +35,13 @@ GRADES = ["bd", "md", "pd"]
 SEVEN_ORDINAL = {"aca_bd": 0, "aca_md": 1, "aca_pd": 2,
                  "scc_bd": 0, "scc_md": 1, "scc_pd": 2}
 
+# BreakHis, the external replication cohort: two benign/malignant superclasses
+# and eight tumour types. Kept beside the LungHist700 label sets rather than in
+# a separate module so that one TASKS registry serves both cohorts.
+BH_SUPERCLASSES = ["benign", "malignant"]
+BH_TYPES = ["adenosis", "ductal", "fibroadenoma", "lobular",
+            "mucinous", "papillary", "phyllodes", "tubular-adenoma"]
+
 
 @dataclass(frozen=True)
 class Task:
@@ -53,6 +60,12 @@ TASKS = {
     # differentiation grade within carcinoma: intrinsically ordinal
     "grade3": Task("grade3", "subclass", tuple(GRADES), ordinal=True,
                    subset="superclass != 'nor'"),
+
+    # --- external replication cohort (BreakHis) ---------------------------
+    # The same protocol contrast, run on a second dataset that also ships a
+    # patient identifier. Coarse and fine tasks mirror super3 and full7.
+    "bh_binary": Task("bh_binary", "superclass", tuple(BH_SUPERCLASSES)),
+    "bh_type8": Task("bh_type8", "label7", tuple(BH_TYPES)),
 }
 
 

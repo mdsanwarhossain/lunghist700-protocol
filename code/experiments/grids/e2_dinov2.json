@@ -1,0 +1,11 @@
+[
+  {
+    "backbone": "dinov2_vitb14",
+    "norm": "raw",
+    "tasks": ["super3", "full7", "grade3"],
+    "protocols": ["patient"],
+    "representations": ["tilemean", "global", "tilemean+global"],
+    "heads": ["linear"],
+    "magnifications": ["both"]
+  }
+]

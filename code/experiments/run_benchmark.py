@@ -24,6 +24,13 @@ from models import heads as H  # noqa: E402
 FEATROOT = Path("data/features")
 
 
+def set_featroot(path: Path) -> None:
+    """Point the feature store elsewhere, so a second cohort's embeddings do
+    not collide with the first's under the same (backbone, norm) name."""
+    global FEATROOT
+    FEATROOT = Path(path)
+
+
 # --------------------------------------------------------------------------
 # Feature assembly
 # --------------------------------------------------------------------------
@@ -206,7 +213,10 @@ def main() -> None:
     ap.add_argument("--tile-max-per-image", type=int, default=8,
                     help="tiles kept per image under the tile protocol; 0 = all")
     ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2, 3, 4])
+    ap.add_argument("--featroot", type=Path, default=FEATROOT,
+                    help="root of the cached embedding store")
     a = ap.parse_args()
+    set_featroot(a.featroot)
 
     index = pd.read_csv(a.index)
     grid = json.loads(a.grid.read_text())
