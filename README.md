@@ -1,13 +1,50 @@
-# LungHist700: protocol, not architecture
+# Split-sensitivity auditing of grouped benchmarks
 
-Code and results for a re-evaluation of the public **LungHist700** lung
-histopathology dataset, testing whether the 89–98% accuracies reported for it
-measure model capacity or evaluation design.
+A procedure, and the software that runs it, for measuring how much of a
+benchmark's reported accuracy comes from the evaluation partition rather than
+from the model — plus the two cohort studies made with it, on the public
+**LungHist700** lung histopathology dataset and on **BreakHis** as an
+independent replication.
 
 The manuscript is under review and is not included here. Everything needed to
 check what was done — the pipeline, every result table, every figure, and the
 per-sample out-of-fold predictions behind the calibration and confusion
 analyses — is in this repository.
+
+---
+
+## Run the audit on your own dataset
+
+```bash
+python code/audit.py --index my_index.csv --out results/my_audit
+```
+
+`--index` is a CSV with one row per image and three columns — `path`, `group`
+(patient, slide, subject, augmentation group) and `label`. Names are
+configurable with `--group-col`, `--label-col`, `--path-col`.
+
+The command encodes once with a frozen encoder, fits an identical linear head
+under a grouped and an ungrouped partition, verifies per-fold disjointness, and
+reports the difference with an interval bootstrapped over **groups** rather
+than folds. Nothing is trained, so it runs on a CPU.
+
+```
+=== split-sensitivity audit ===
+691 images, 45 groups, 3 classes
+groups contributing a single class: 36/45
+
+grouped   balanced accuracy 0.720  [0.670, 0.776]  (interval over groups)
+ungrouped balanced accuracy 0.922
+INFLATION +20.2 percentage points  (Wilcoxon p = 3.05e-05)
+groups shared across a grouped fold: 0  (must be 0)
+```
+
+The five steps: establish that a grouping variable exists and is recoverable
+(if it cannot be, stop — no sound estimate is available); encode once; fit
+matched arms; verify the split rather than assume it; report the contrast and
+an interval over groups. Grouped cross-validation is itself standard; what the
+audit adds is the matched contrast that prices the alternative, the stop rule,
+and the interval over the unit that actually varies.
 
 ---
 
@@ -28,8 +65,24 @@ Holm-adjusted *p* < 10⁻⁵ in every comparison
 (`results/tables/leakage_inflation.csv`).
 
 Exchanging one frozen encoder for another under the correct protocol moves the
-same numbers by 14.8, 1.6 and 3.5 points respectively. **The split matters more
-than the model, and overwhelmingly so once the task is hard.**
+same numbers by 14.8, 3.7 and 5.7 points respectively — a ratio of only 1.4 on
+the easy task but 8.0 and 5.8 on the two hard ones. **The split matters more
+than the model, and decisively so once the task is hard.**
+
+**It replicates.** The same audit, unchanged except for the index builder, on
+BreakHis (2,081 images, 81 patients at 100×): **+10.2 points**
+benign-vs-malignant, **+42.3 points** on the eight-type task
+(0.424 → 0.847).
+
+**And it is predictable.** Capping images per patient and re-running the
+contrast traces a dose–response curve on both cohorts: at one image per group
+the two protocols are the same partition and the inflation vanishes (−2.8
+points on LungHist700, −1.6 on BreakHis), then it rises and saturates. Holding
+the total near 170 images and trading patients against images-per-patient
+instead — so the rise cannot be a sample-size effect — it still climbs, +12.7
+to +30.2 points. The mechanism: under an ungrouped split **two thirds of test
+images have their nearest training neighbour inside their own patient**; under
+a grouped split, none do.
 
 Best patient-disjoint results (Phikon ViT-B/16, tile-mean + global):
 3-class **0.875**, grading **0.515**, 7-class **0.535**. The last two have no
@@ -57,6 +110,10 @@ Every number in the manuscript is generated, never typed. To check one:
 | Attention faithfulness (deletion/insertion) | `results/tables/attribution_faithfulness_*.csv` |
 | LC25000 group-recovery attempt | `results/tables/lc25000_group_recovery.csv` |
 | Audit of the eight prior studies | `results/tables/related_work.csv` |
+| BreakHis replication | `results/tables/breakhis_folds.csv` |
+| Mechanism sweep (both cohorts) | `results/tables/mechanism_*.csv` |
+| Sample-size control | `results/tables/mechanism_control_lunghist700.csv` |
+| Clinical metrics, patient-level intervals | `results/tables/clinical_metrics.csv` |
 | Dataset audit (counts, duplicates, fold bound) | `results/tables/dataset_audit.txt` |
 
 The `*_preds.csv` files hold per-sample out-of-fold predictions with
@@ -107,9 +164,12 @@ Not included — it is public and large (≈3 GB).
   <https://doi.org/10.1038/s41597-024-03944-3>; data on figshare,
   <https://doi.org/10.6084/m9.figshare.25459174>.
 - **LC25000**: Borkowski *et al.*, arXiv:1912.12142 (2019).
+- **BreakHis**: 7,909 images, 82 patients. Spanhol *et al.*, *IEEE TBME*
+  63(7):1455–1462 (2016). Distributed by the Laboratório Visão Robótica e
+  Imagem at UFPR, which asks users to complete a short form.
 
-Place LungHist700 under `data/data/` and the LC25000 parquets under
-`data/lc25000/`.
+Place LungHist700 under `data/data/`, the LC25000 parquets under
+`data/lc25000/`, and the extracted BreakHis tree under `data/breakhis/`.
 
 ---
 
@@ -121,11 +181,14 @@ code/
                           attribution external report
   thermal_run.py          thermal governor for CPU-only long runs
   reap_orphans.sh         removes workers orphaned by an interrupted run
-  preprocess/             dataset audit, image index
+  preprocess/             dataset audit, image index (both cohorts)
   features/               tiling and frozen-encoder extraction
   models/heads.py         linear, MLP, gated attention-MIL heads
+  audit.py                the split-sensitivity audit, for any grouped dataset
   experiments/
     protocols.py          the three splitters, metrics, fold checks
+    mechanism.py          inflation against images per group
+    mechanism_control.py  the same, with total images held fixed
     run_benchmark.py      the task × protocol × representation × head grid
     run_fusion.py         encoder fusion and pooling ablation
     transfer_and_curves.py  magnification transfer, patient learning curve
@@ -164,10 +227,14 @@ reduce it.
 
 ## Note on scope
 
-Two planned analyses were not completed, and the manuscript says so: a
-natural-image self-supervised encoder (DINOv2) whose encoding pass did not
-finish within the compute budget, and stain normalisation beyond a single
-normaliser on a single encoder.
+The comparison spans four frozen encoders over three pretraining regimes
+(ImageNet-supervised, pathology-domain self-supervised, natural-image
+self-supervised). No encoder is fine-tuned: freezing is what makes the
+partition the only varying factor. Stain normalisation was run with a single
+normaliser on a single encoder, and BreakHis is audited at one magnification,
+because pooling its four would put the same tissue at 40× and 400× on both
+sides of an ungrouped split — a second leakage channel. The manuscript states
+each of these.
 
 ---
 
