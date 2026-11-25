@@ -42,12 +42,27 @@ WANTED = {
     "mechCtrlLowCell":        "control: low cell, images x groups",
     "mechCtrlHighCell":       "control: high cell, images x groups",
     "mechCtrlN":              "control: images per cell",
+    "ftPatient":              "fine-tuned, patient-disjoint",
+    "ftImage":                "fine-tuned, image-level",
+    "ftInflation":            "fine-tuned inflation",
+    "ftP":                    "fine-tuned contrast, Wilcoxon p",
+    "ftD":                    "fine-tuned contrast, Cohen d",
+    "ftRatio":                "frozen inflation / fine-tuned inflation",
+    "ftFolds":                "fine-tuned matched folds",
+    "ftEpochs":               "fine-tuning epochs",
+    "magInflTwenty":          "protocol inflation at 20x only",
+    "magInflForty":           "protocol inflation at 40x only",
+    "magPatientTwenty":       "patient-disjoint at 20x",
+    "magPatientForty":        "patient-disjoint at 40x",
     "bhPatientBinary":        "BreakHis binary, patient-disjoint",
     "bhImageBinary":          "BreakHis binary, image-level",
     "bhInflationBinary":      "BreakHis binary inflation",
     "bhPatientTypeEight":     "BreakHis 8-type, patient-disjoint",
     "bhImageTypeEight":       "BreakHis 8-type, image-level",
     "bhInflationTypeEight":   "BreakHis 8-type inflation",
+    "bhInflationBinaryVal":   "BreakHis binary inflation, bare",
+    "bhInflationTypeEightVal":"BreakHis 8-type inflation, bare",
+    "ftInflationVal":         "fine-tuned inflation, bare",
     "bhPatients":             "BreakHis patient count",
     "bhImages":               "BreakHis image count at the audited magnification",
     "cmSensSuperThree":       "clinical macro sensitivity, best super3",
@@ -412,8 +427,10 @@ def collect() -> dict[str, str]:
                 vals[proto] = m
                 out[key + tag] = _fmt(m, lo, hi)
             if "patient" in vals and "image" in vals:
-                out["bhInflation" + tag] = \
-                    f"{100 * (vals['image'] - vals['patient']):+.1f} percentage points"
+                _bh = 100 * (vals['image'] - vals['patient'])
+                out["bhInflation" + tag] = f"{_bh:+.1f} percentage points"
+                # bare value, for prose that already carries the unit
+                out["bhInflation" + tag + "Val"] = f"{_bh:+.1f}"
         if "n_test_patients" in bh.columns:
             tot = bh[(bh.protocol == "patient") & (bh.seed == bh.seed.min())
                      & (bh.task == bh.task.iloc[0])]
@@ -435,6 +452,48 @@ def collect() -> dict[str, str]:
         if 1 in cv.index:
             out["mechBhAtOne"] = f"{cv.loc[1]:+.1f} percentage points"
         out["mechBhFull"] = f"{cv.iloc[-1]:+.1f} percentage points"
+
+    # ---- the fine-tuned arm, which tests the paper's own prediction ---------
+    ft = _read("finetune_folds.csv")
+    if ft is not None:
+        w = ft.pivot_table(index=["seed", "fold"], columns="protocol",
+                           values="balanced_accuracy").dropna()
+        delta = w["image"] - w["patient"]
+        out["ftPatient"] = f"{w['patient'].mean():.3f}"
+        out["ftImage"] = f"{w['image'].mean():.3f}"
+        out["ftInflation"] = f"{100 * delta.mean():+.1f} percentage points"
+        out["ftInflationVal"] = f"{100 * delta.mean():+.1f}"
+        out["ftFolds"] = str(len(w))
+        out["ftD"] = f"{delta.mean() / delta.std():.2f}"
+        try:
+            from scipy.stats import wilcoxon
+            out["ftP"] = f"{wilcoxon(delta).pvalue:.1e}".replace("e-0", "\\times 10^{-") + "}"
+        except Exception:
+            pass
+        e1 = _read("e1_leakage_folds.csv")
+        if e1 is not None:
+            f = e1[(e1.task == "super3") & (e1["head"] == "linear")
+                   & (e1.representation == "tilemean")
+                   & (e1.backbone == "resnet50_in1k")
+                   & (e1.magnification == "both")]
+            fp = f.pivot_table(index=["seed", "fold"], columns="protocol",
+                               values="balanced_accuracy")
+            fd = (fp["image"] - fp["patient"]).mean()
+            if delta.mean() > 0:
+                out["ftRatio"] = f"{fd / delta.mean():.1f}"
+        out["ftEpochs"] = "8"
+
+    # ---- the contrast measured within each magnification separately ---------
+    mg = _read("e1_magnification_folds.csv")
+    if mg is not None:
+        w = mg.pivot_table(index=["magnification", "seed", "fold"],
+                           columns="protocol", values="balanced_accuracy")
+        for mag, tag in (("20x", "Twenty"), ("40x", "Forty")):
+            if mag in w.index.get_level_values(0):
+                g = w.loc[mag].dropna()
+                out["magInfl" + tag] = \
+                    f"{100 * (g['image'] - g['patient']).mean():+.1f} percentage points"
+                out["magPatient" + tag] = f"{g['patient'].mean():.3f}"
 
     ctrl = _read("mechanism_control_lunghist700.csv")
     if ctrl is not None:
