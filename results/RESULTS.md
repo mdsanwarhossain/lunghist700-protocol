@@ -158,7 +158,10 @@ patient_id
 | phikon_vitb16 | tilemean+global | 0.875 [0.864, 0.886] | 0.863 | 0.793 | 0.975 |
 | phikon_vitb16 | tilemean | 0.870 [0.857, 0.884] | 0.862 | 0.781 | 0.966 |
 | phikon_vitb16 | global | 0.822 [0.813, 0.832] | 0.811 | 0.704 | 0.936 |
+| dinov2_vitb14 | tilemean+global | 0.800 [0.784, 0.816] | 0.790 | 0.676 | 0.936 |
+| dinov2_vitb14 | tilemean | 0.789 [0.770, 0.807] | 0.780 | 0.651 | 0.913 |
 | efficientnet_b0 | tilemean | 0.786 [0.768, 0.804] | 0.774 | 0.654 | 0.899 |
+| dinov2_vitb14 | global | 0.785 [0.772, 0.797] | 0.776 | 0.655 | 0.914 |
 | resnet50_in1k | tilemean | 0.722 [0.696, 0.748] | 0.712 | 0.561 | 0.879 |
 | resnet50_in1k | tilemean+global | 0.722 [0.692, 0.751] | 0.707 | 0.557 | 0.869 |
 | efficientnet_b0 | global | 0.632 [0.607, 0.657] | 0.625 | 0.427 | 0.798 |
@@ -171,10 +174,13 @@ patient_id
 |---|---|---|---|---|---|
 | phikon_vitb16 | tilemean+global | 0.535 [0.487, 0.583] | 0.504 | 0.505 | 0.881 |
 | phikon_vitb16 | global | 0.516 [0.476, 0.557] | 0.475 | 0.469 | 0.859 |
+| dinov2_vitb14 | tilemean+global | 0.502 [0.465, 0.535] | 0.481 | 0.474 | 0.870 |
 | phikon_vitb16 | tilemean | 0.497 [0.458, 0.537] | 0.464 | 0.480 | 0.864 |
+| dinov2_vitb14 | global | 0.480 [0.441, 0.518] | 0.441 | 0.419 | 0.849 |
 | efficientnet_b0 | tilemean | 0.478 [0.442, 0.513] | 0.450 | 0.442 | 0.847 |
 | resnet50_in1k | tilemean | 0.462 [0.419, 0.507] | 0.436 | 0.405 | 0.826 |
 | resnet50_in1k | tilemean+global | 0.445 [0.406, 0.486] | 0.417 | 0.389 | 0.827 |
+| dinov2_vitb14 | tilemean | 0.440 [0.393, 0.484] | 0.415 | 0.396 | 0.843 |
 | efficientnet_b0 | global | 0.413 [0.380, 0.449] | 0.381 | 0.320 | 0.800 |
 | resnet50_in1k | global | 0.398 [0.369, 0.427] | 0.365 | 0.312 | 0.784 |
 | resnet50_in1k | handcrafted | 0.308 [0.278, 0.341] | 0.270 | 0.222 | 0.711 |
@@ -184,12 +190,15 @@ patient_id
 | backbone | representation | balanced accuracy [95% CI] | macro-F1 | MCC | AUC (OvR) | QWK |
 |---|---|---|---|---|---|---|
 | phikon_vitb16 | tilemean+global | 0.515 [0.478, 0.550] | 0.500 | 0.303 | 0.713 | 0.531 |
+| dinov2_vitb14 | tilemean+global | 0.512 [0.478, 0.548] | 0.494 | 0.294 | 0.718 | 0.547 |
 | phikon_vitb16 | global | 0.509 [0.481, 0.536] | 0.497 | 0.294 | 0.710 | 0.526 |
 | phikon_vitb16 | tilemean | 0.505 [0.461, 0.548] | 0.496 | 0.289 | 0.712 | 0.486 |
 | efficientnet_b0 | global | 0.500 [0.461, 0.541] | 0.492 | 0.268 | 0.703 | 0.414 |
+| dinov2_vitb14 | global | 0.499 [0.469, 0.527] | 0.481 | 0.267 | 0.682 | 0.464 |
 | resnet50_in1k | tilemean | 0.492 [0.464, 0.518] | 0.482 | 0.264 | 0.676 | 0.451 |
 | efficientnet_b0 | tilemean | 0.489 [0.444, 0.534] | 0.480 | 0.258 | 0.680 | 0.442 |
 | resnet50_in1k | global | 0.474 [0.450, 0.497] | 0.452 | 0.227 | 0.649 | 0.364 |
+| dinov2_vitb14 | tilemean | 0.468 [0.426, 0.510] | 0.462 | 0.229 | 0.688 | 0.440 |
 | resnet50_in1k | tilemean+global | 0.460 [0.434, 0.488] | 0.442 | 0.212 | 0.651 | 0.399 |
 | resnet50_in1k | handcrafted | 0.254 [0.226, 0.280] | 0.256 | -0.091 | 0.485 | 0.111 |
 
@@ -205,6 +214,9 @@ patient_id
 
 | backbone | task | 20x | 40x | pooled |
 |---|---|---|---|---|
+| dinov2_vitb14 | full7 | nan | nan | 0.440 |
+| dinov2_vitb14 | grade3 | nan | nan | 0.468 |
+| dinov2_vitb14 | super3 | nan | nan | 0.789 |
 | efficientnet_b0 | full7 | nan | nan | 0.478 |
 | efficientnet_b0 | grade3 | nan | nan | 0.489 |
 | efficientnet_b0 | super3 | nan | nan | 0.786 |
@@ -219,12 +231,15 @@ patient_id
 
 | task | backbone | ResNet-50 | this | delta [95% CI] | Cohen d | p (Holm) |
 |---|---|---|---|---|---|---|
-| super3 | efficientnet_b0 | 0.722 | 0.786 | +0.064 [0.042, 0.088] | 0.85 | 0.045 |
-| super3 | phikon_vitb16 | 0.722 | 0.870 | +0.148 [0.118, 0.179] | 1.46 | 0.0019 |
-| full7 | efficientnet_b0 | 0.462 | 0.478 | +0.015 [-0.016, 0.046] | 0.15 | 0.71 |
-| full7 | phikon_vitb16 | 0.462 | 0.497 | +0.035 [0.009, 0.059] | 0.42 | 0.63 |
+| super3 | efficientnet_b0 | 0.722 | 0.786 | +0.064 [0.042, 0.088] | 0.85 | 0.09 |
+| super3 | phikon_vitb16 | 0.722 | 0.870 | +0.148 [0.118, 0.179] | 1.46 | 0.0029 |
+| super3 | dinov2_vitb14 | 0.722 | 0.789 | +0.066 [0.034, 0.099] | 0.63 | 0.13 |
+| full7 | efficientnet_b0 | 0.462 | 0.478 | +0.015 [-0.016, 0.046] | 0.15 | 1 |
+| full7 | phikon_vitb16 | 0.462 | 0.497 | +0.035 [0.009, 0.059] | 0.42 | 0.94 |
+| full7 | dinov2_vitb14 | 0.462 | 0.440 | -0.023 [-0.054, 0.009] | -0.22 | 1 |
 | grade3 | efficientnet_b0 | 0.492 | 0.489 | -0.002 [-0.028, 0.023] | -0.03 | 1 |
 | grade3 | phikon_vitb16 | 0.492 | 0.505 | +0.013 [-0.016, 0.043] | 0.14 | 1 |
+| grade3 | dinov2_vitb14 | 0.492 | 0.468 | -0.024 [-0.052, 0.006] | -0.25 | 1 |
 
 ## Error structure and confidence (7-class, phikon_vitb16, patient-disjoint)
 
@@ -267,6 +282,9 @@ patient_id
 
 | backbone | task | normalisation | balanced accuracy [95% CI] | delta vs raw | p (Holm) |
 |---|---|---|---|---|---|
+| dinov2_vitb14 | full7 | raw | 0.440 [0.393, 0.484] | - | - |
+| dinov2_vitb14 | grade3 | raw | 0.468 [0.426, 0.510] | - | - |
+| dinov2_vitb14 | super3 | raw | 0.789 [0.770, 0.807] | - | - |
 | efficientnet_b0 | full7 | raw | 0.478 [0.442, 0.513] | - | - |
 | efficientnet_b0 | grade3 | raw | 0.489 [0.444, 0.534] | - | - |
 | efficientnet_b0 | super3 | raw | 0.786 [0.768, 0.804] | - | - |
@@ -283,14 +301,17 @@ patient_id
 
 | backbone | task | head | balanced accuracy [95% CI] | macro-F1 |
 |---|---|---|---|---|
+| dinov2_vitb14 | full7 | linear | 0.440 [0.393, 0.484] | 0.415 |
 | efficientnet_b0 | full7 | linear | 0.478 [0.442, 0.513] | 0.450 |
 | phikon_vitb16 | full7 | attnmil | 0.521 [0.465, 0.577] | 0.494 |
 | phikon_vitb16 | full7 | linear | 0.497 [0.458, 0.537] | 0.464 |
 | phikon_vitb16 | full7 | mlp | 0.484 [0.433, 0.538] | 0.453 |
 | resnet50_in1k | full7 | linear | 0.462 [0.419, 0.507] | 0.436 |
+| dinov2_vitb14 | grade3 | linear | 0.468 [0.426, 0.510] | 0.462 |
 | efficientnet_b0 | grade3 | linear | 0.489 [0.444, 0.534] | 0.480 |
 | phikon_vitb16 | grade3 | linear | 0.505 [0.461, 0.548] | 0.496 |
 | resnet50_in1k | grade3 | linear | 0.492 [0.464, 0.518] | 0.482 |
+| dinov2_vitb14 | super3 | linear | 0.789 [0.770, 0.807] | 0.780 |
 | efficientnet_b0 | super3 | linear | 0.786 [0.768, 0.804] | 0.774 |
 | phikon_vitb16 | super3 | attnmil | 0.888 [0.870, 0.907] | 0.884 |
 | phikon_vitb16 | super3 | linear | 0.870 [0.857, 0.884] | 0.862 |
