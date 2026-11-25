@@ -64,7 +64,7 @@ def fig_leakage(folds: pd.DataFrame, out: Path, metric: str = "balanced_accuracy
                         ha="center", fontsize=8)
         n_cls = {"super3": 3, "full7": 7, "grade3": 3}[task]
         ax.axhline(1 / n_cls, ls=":", lw=1, color="#6B7280")
-        ax.annotate("chance", (2.45, 1 / n_cls), fontsize=7, color="#6B7280",
+        ax.annotate("chance", (2.45, 1 / n_cls), fontsize=8, color="#6B7280",
                     va="bottom", ha="right")
         ax.set_xticks(range(3))
         ax.set_xticklabels(["patient-\ndisjoint", "image-\nlevel", "tile-\nlevel"])
@@ -148,7 +148,7 @@ def fig_confusion(preds: pd.DataFrame, classes: list[str], out: Path,
         for j in range(len(classes)):
             if M[i, j]:
                 ax.text(j, i, f"{Mn[i,j]:.2f}", ha="center", va="center",
-                        fontsize=7.5, color="white" if Mn[i, j] > 0.55 else "#1F2937")
+                        fontsize=8, color="white" if Mn[i, j] > 0.55 else "#1F2937")
     ax.set_xticks(range(len(classes)), classes, rotation=45, ha="right", fontsize=8)
     ax.set_yticks(range(len(classes)), classes, fontsize=8)
     ax.set_xlabel("predicted")
@@ -170,7 +170,7 @@ def fig_confusion(preds: pd.DataFrame, classes: list[str], out: Path,
         axb.set_xlabel("share of all predictions", fontsize=8)
         axb.set_xlim(0, max(vals) * 1.28)
         axb.set_title("(b) Which mistakes the errors are", fontsize=9)
-        axb.grid(axis="x", alpha=0.3)
+        axb.grid(False)
         axb.set_axisbelow(True)
     _save(fig, out, name)
 
@@ -220,7 +220,7 @@ def fig_calibration(rel: pd.DataFrame, rc: pd.DataFrame, out: Path,
     a1.set_title("Reliability")
     a1.set_xlim(0, 1)
     a1.set_ylim(0, 1)
-    a1.annotate("perfectly\ncalibrated", (0.72, 0.60), fontsize=7, color="#6B7280")
+    a1.annotate("perfectly\ncalibrated", (0.72, 0.60), fontsize=8, color="#6B7280")
 
     a2.plot(rc.coverage, rc.selective_risk, "o-", color="#C2571A", ms=4, lw=1.4)
     a2.set_xlabel("coverage (fraction of fields reported)")
@@ -294,10 +294,10 @@ def _protocol_schematic(ax) -> None:
         ax.text(x0 + 1.65, 0.60, f"patient {p}", ha="center", fontsize=8,
                 color="#374151")
     ax.text(0.0, -1.55, "each block is one tile; three images per patient",
-            fontsize=7.5, color="#6B7280")
+            fontsize=8, color="#6B7280")
     h = [plt.Rectangle((0, 0), 1, 1, facecolor=c) for c in (train, test)]
     ax.legend(h, ["training side", "test side"], loc="lower right",
-              fontsize=7.5, ncol=2, bbox_to_anchor=(1.02, -0.12))
+              fontsize=8, ncol=2, bbox_to_anchor=(1.02, -0.12))
     ax.set_xlim(-2.6, 8.2)
     ax.set_ylim(-1.7, 0.8)
     ax.axis("off")
@@ -318,13 +318,13 @@ def _pipeline_schematic(ax, n_encoders: int = 4) -> None:
         (7.0, "cached embedding\nstore", "#FDF0E6", "#C2571A"),
     ]
     for x, text, fc, ec in steps:
-        ax.text(x, 2.25, text, ha="center", va="center", fontsize=7.6,
+        ax.text(x, 2.25, text, ha="center", va="center", fontsize=8,
                 bbox={**box, "facecolor": fc, "edgecolor": ec})
     for x in (1.45, 3.62, 5.85):
         ax.annotate("", (x + 0.45, 2.25), (x, 2.25),
                     arrowprops=dict(arrowstyle="->", lw=0.9, color="#6B7280"))
     ax.text(3.75, 2.88, "encoded once per (encoder, stain) pair",
-            ha="center", fontsize=7, color="#6B7280", style="italic")
+            ha="center", fontsize=8, color="#6B7280", style="italic")
 
     # the grid fitted on top of the store
     factors = [("task", "super3 / full7 / grade3"),
@@ -334,15 +334,15 @@ def _pipeline_schematic(ax, n_encoders: int = 4) -> None:
                ("magnification", "20$\\times$ / 40$\\times$ / both")]
     y = 1.45
     for name, levels in factors:
-        ax.text(5.25, y, name, ha="right", va="center", fontsize=7.4,
+        ax.text(5.25, y, name, ha="right", va="center", fontsize=8,
                 color="#374151", fontweight="bold")
-        ax.text(5.45, y, levels, ha="left", va="center", fontsize=7.4,
+        ax.text(5.45, y, levels, ha="left", va="center", fontsize=8,
                 color="#4B5563")
         y -= 0.30
     ax.annotate("", (7.0, 1.52), (7.0, 2.02),
                 arrowprops=dict(arrowstyle="->", lw=0.9, color="#6B7280"))
     ax.text(2.0, 1.52, "cross-validated heads\nover the grid:", ha="center",
-            va="top", fontsize=7.6, color="#374151")
+            va="top", fontsize=8, color="#374151")
     ax.add_patch(plt.Rectangle((5.3, -0.07), 4.0, 1.68, facecolor="none",
                                edgecolor="#9CA3AF", linewidth=0.8,
                                linestyle="--"))
@@ -368,9 +368,9 @@ def fig_design(incidence: pd.DataFrame, out: Path, n_encoders: int = 4) -> None:
     im = ax.imshow(np.where(m > 0, m, np.nan), aspect="auto", cmap="Blues",
                    vmin=0, vmax=np.nanmax(m))
     ax.set_xticks(range(d.shape[1]))
-    ax.set_xticklabels([CLASS_LABEL[c] for c in d.columns], fontsize=7.5)
+    ax.set_xticklabels([CLASS_LABEL[c] for c in d.columns], fontsize=8)
     ax.set_yticks(range(0, len(d), 4))
-    ax.set_yticklabels(d.index[::4], fontsize=7)
+    ax.set_yticklabels(d.index[::4], fontsize=8)
     ax.set_ylabel("patient")
     ax.grid(False)
     fig.colorbar(im, ax=ax, label="images", fraction=0.03, pad=0.015)
@@ -463,7 +463,7 @@ def fig_protocol_vs_representation(folds: pd.DataFrame, summary: pd.DataFrame,
                      yerr=[[r[f"{metric}_mean"] - r[f"{metric}_lo"]],
                            [r[f"{metric}_hi"] - r[f"{metric}_mean"]]])
     axb.set_xticks(range(len(b)))
-    axb.set_xticklabels(b.backbone, rotation=20, ha="right", fontsize=7.5)
+    axb.set_xticklabels(b.backbone, rotation=20, ha="right", fontsize=8)
     axb.set_title("(b)  patient-disjoint throughout", fontsize=9.5, loc="left")
 
     for ax in (axa, axb):
@@ -508,7 +508,7 @@ def fig_literature(related: pd.DataFrame, out: Path,
                                                  if base else ""),
                     (r.headline_value, i), xytext=(7, 0),
                     textcoords="offset points", va="center",
-                    fontsize=7.5, fontweight="bold" if base else "normal",
+                    fontsize=8, fontweight="bold" if base else "normal",
                     color="#111827" if base else "#374151")
 
     def _first(study: str) -> str:
@@ -540,9 +540,9 @@ def fig_literature(related: pd.DataFrame, out: Path,
             handles.append(plt.Line2D([], [], color=c, marker=mk, ls="",
                                       markersize=6, label=lab))
             seen.append(k)
-    leg = ax.legend(handles=handles, fontsize=7.5, loc="upper left",
+    leg = ax.legend(handles=handles, fontsize=8, loc="upper left",
                     bbox_to_anchor=(0.005, 0.62), title="split protocol",
-                    title_fontsize=7.5, frameon=True, framealpha=1.0)
+                    title_fontsize=8, frameon=True, framealpha=1.0)
     leg.get_frame().set_edgecolor("none")
     leg.set_zorder(6)
     ax.set_title("Reported performance tracks the evaluation protocol",
@@ -575,7 +575,7 @@ def fig_attribution(tables: dict[str, pd.DataFrame], out: Path) -> None:
                      f"attention wins on {100*(gap>0).mean():.0f}% of images",
                      fontsize=9)
         ax.set_xlabel("deletion AUC (lower = faster degradation)")
-        ax.legend(fontsize=7.5, loc="upper left")
+        ax.legend(fontsize=8, loc="upper left")
     axes[0].set_ylabel("images")
     fig.suptitle("Attention identifies tiles the model relies on",
                  fontsize=10.5, y=1.04)

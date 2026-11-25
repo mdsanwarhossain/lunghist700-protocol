@@ -55,15 +55,16 @@ def main() -> None:
 
     fig, (ax, ax2, ax3) = plt.subplots(1, 3, figsize=(13.6, 3.7))
 
-    for (label, d), color in zip(frames.items(), (BLUE, ORANGE)):
+    styles = ((BLUE, "o", "-"), (ORANGE, "s", "--"))
+    for (label, d), (color, mk, ls) in zip(frames.items(), styles):
         c = _curve(d)
-        ax.errorbar(c.ipg, c.infl, yerr=c.sd.fillna(0), marker="o", ms=5,
-                    lw=1.8, capsize=3, color=color, label=label)
+        ax.errorbar(c.ipg, c.infl, yerr=c.sd.fillna(0), marker=mk, ms=5,
+                    lw=1.8, ls=ls, capsize=3, color=color, label=label)
     ax.axhline(0, color=GREY, lw=1, ls=":")
     ax.set_xlabel("images per group (mean)")
     ax.set_ylabel("inflation from an ungrouped split (points)")
     ax.set_title("(a) The effect appears as groups grow", fontsize=10.5)
-    ax.legend(fontsize=8, loc="lower right", frameon=False)
+    ax.legend(fontsize=8.5, loc="lower right", frameon=False)
     ax.set_xscale("log")
     ax.set_xticks([1, 2, 4, 8, 16], ["1", "2", "4", "8", "16"])
 
@@ -72,17 +73,18 @@ def main() -> None:
         g = (first.groupby(["cap", "protocol"])
              .agg(ipg=("images_per_group", "first"),
                   nn=("nn_same_group", "mean")).reset_index())
-        for proto, color, lab in (("image", ORANGE, "ungrouped split"),
-                                  ("patient", BLUE, "grouped split")):
+        for proto, color, lab, mk, ls in (
+                ("image", ORANGE, "ungrouped split", "s", "--"),
+                ("patient", BLUE, "grouped split", "o", "-")):
             gg = g[g.protocol == proto].sort_values("ipg")
-            ax2.plot(gg.ipg, gg.nn, marker="o", ms=5, lw=1.8, color=color,
-                     label=lab)
+            ax2.plot(gg.ipg, gg.nn, marker=mk, ms=5, lw=1.8, ls=ls,
+                     color=color, label=lab)
         ax2.set_xlabel("images per group (mean)")
         ax2.set_ylabel("nearest training neighbour\nis from the same group")
         ax2.set_title("(b) Why: the test image's twin is in training",
                       fontsize=10.5)
         ax2.set_ylim(-0.03, 1.0)
-        ax2.legend(fontsize=8, loc="upper left", frameon=False)
+        ax2.legend(fontsize=8.5, loc="upper left", frameon=False)
         ax2.set_xscale("log")
         ax2.set_xticks([1, 2, 4, 8, 16], ["1", "2", "4", "8", "16"])
 
@@ -105,7 +107,7 @@ def main() -> None:
         ax3.set_xticks(cc.per_group.tolist(),
                        [f"{int(v)}\n{int(n)} groups"
                         for v, n in zip(cc.per_group, cc.n_groups)],
-                       fontsize=8.5)
+                       fontsize=8)
         ax3.set_xlabel(f"images per group (total held near {int(cc.n.mean())})")
         ax3.set_ylabel("inflation (points)")
         ax3.set_title("(c) Not a sample-size effect", fontsize=10.5)
@@ -113,7 +115,7 @@ def main() -> None:
         ax3.set_ylim(0, (cc.infl + cc.sd.fillna(0)).max() * 1.15)
 
     for axis in (ax, ax2, ax3):
-        axis.grid(alpha=0.3)
+        axis.grid(False)
         axis.set_axisbelow(True)
         for sp in ("top", "right"):
             axis.spines[sp].set_visible(False)
